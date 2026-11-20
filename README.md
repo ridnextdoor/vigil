@@ -81,7 +81,7 @@ web page at `https://<your-username>.github.io/<repo-name>/`.
 6. **Run it once.** Actions tab > "Update wallet data" > Run workflow. After a minute or two the page is live.
 
 Optional repository variables (same Settings page, Variables tab): `TRACK_WALLET` to track a different wallet,
-`SOL_USD` to set the SOL price used for USD estimates.
+`SOL_USD` to set the SOL price used for USD estimates, `KEEP_DAYS` for how many days of trades to keep (default 14).
 
 ### How it works
 

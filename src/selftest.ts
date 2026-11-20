@@ -204,4 +204,16 @@ const port = (server.address() as { port: number }).port;
 }
 server.close();
 
+{
+  const store = tmpStore();
+  const mk = (sig: string, ts: number) => ({ sig, ts, mint: 'AAApump', side: 'buy' as const, tokens: 1, usd: 1, mcUsd: 1, source: 'csv' as const });
+  store.add(mk('old', 1_000)); store.add(mk('new', 5_000));
+  assert.equal(store.prune(2_000), 1);
+  assert.equal(store.trades.length, 1);
+  assert.equal(store.hasSig('old'), false);
+  assert.ok(store.add(mk('old', 1_000)), 'a pruned trade can be added again');
+  passed++;
+  console.log('ok   prune removes old trades and forgets their keys');
+}
+
 console.log(`\n${passed} tests passed (including wallet tracker and sync)`);

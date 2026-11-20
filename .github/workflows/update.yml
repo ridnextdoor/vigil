@@ -48,6 +48,7 @@ jobs:
           RPC_HTTP_URL: ${{ secrets.RPC_URL }}
           TRACK_WALLET: ${{ vars.TRACK_WALLET }}
           SOL_USD: ${{ vars.SOL_USD }}
+          KEEP_DAYS: ${{ vars.KEEP_DAYS }}
         run: npm run sync
 
       - name: Save data
@@ -68,9 +69,14 @@ jobs:
           SOL_USD: ${{ vars.SOL_USD }}
         run: npm run build-site
 
+      # Data is already saved above. If Pages is not available (for example a private repository
+      # on the free plan), these steps may fail without hiding that the data update worked.
       - uses: actions/configure-pages@v5
+        continue-on-error: true
       - uses: actions/upload-pages-artifact@v3
+        continue-on-error: true
         with:
           path: site
       - id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true

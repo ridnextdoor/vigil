@@ -57,6 +57,7 @@ export class LiveTracker {
   private stopped = false;
   private http: string;
   private queue: Promise<void> = Promise.resolve();
+  private born = new Map<string, number | null>(); // token creation time (seconds), cached per mint
 
   constructor(private wsUrl: string, private wallet: string, private store: TradeStore, private solUsd: number, private backfill: number) {
     this.http = httpFromWs(wsUrl);
@@ -155,11 +156,12 @@ export class LiveTracker {
   private async enrich(t: WalletTrade) {
     try {
       const curve = bondingCurveFor(new PublicKey(t.mint));
-      const sigs: any[] = await this.rpc('getSignaturesForAddress', [curve.toBase58(), { limit: 1000 }]);
-      if (sigs.length && sigs.length < 1000) {
-        const born = sigs[sigs.length - 1].blockTime;
-        if (born) t.ageSec = Math.max(0, t.ts / 1000 - born);
+      if (!this.born.has(t.mint)) {
+        const sigs: any[] = await this.rpc('getSignaturesForAddress', [curve.toBase58(), { limit: 1000 }]);
+        this.born.set(t.mint, sigs.length && sigs.length < 1000 ? (sigs[sigs.length - 1].blockTime ?? null) : null);
       }
+      const born = this.born.get(t.mint);
+      if (born) t.ageSec = Math.max(0, t.ts / 1000 - born);
       if (Date.now() - t.ts < 60_000) {
         const acc = await this.rpc('getAccountInfo', [curve.toBase58(), { encoding: 'base64', commitment: 'confirmed' }]);
         const data = acc?.value?.data?.[0];

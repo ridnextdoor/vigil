@@ -33,7 +33,11 @@ try {
   // First run looks back as far as one request allows; later runs fetch only what is new.
   const r = await tracker.syncOnce(1000, lastSig);
   fs.writeFileSync(stateFile, JSON.stringify({ lastSig: r.resumeFrom, updatedAt: Date.now() }));
-  console.log(`[sync] ${r.seen} new transactions checked, ${store.trades.length - before} new memecoin trades saved`);
+  const added = store.trades.length - before;
+  // Keep the saved history bounded so the data file stays small. Change with KEEP_DAYS.
+  const keepDays = Number(process.env.KEEP_DAYS) > 0 ? Number(process.env.KEEP_DAYS) : 14;
+  const removed = store.prune(Date.now() - keepDays * 86_400_000);
+  console.log(`[sync] ${r.seen} new transactions checked, ${added} new memecoin trades saved, ${removed} older than ${keepDays} days removed`);
 } catch (e) {
   // Never print the URL: it contains the API key.
   console.error('[sync] failed:', (e as Error).message);

@@ -55,6 +55,18 @@ export class TradeStore {
     return true;
   }
 
+  /** Drop trades older than `minTs` (ms) and rewrite the file. Returns how many were removed. */
+  prune(minTs: number) {
+    const keep = this.trades.filter((t) => t.ts >= minTs);
+    const removed = this.trades.length - keep.length;
+    if (removed === 0) return 0;
+    this.trades = keep;
+    this.keys = new Set(keep.map((t) => `${t.sig}:${t.mint}:${t.side}`));
+    this.sigs = new Set(keep.map((t) => t.sig));
+    fs.writeFileSync(this.file, keep.map((t) => JSON.stringify(t) + '\n').join(''));
+    return removed;
+  }
+
   /** Add a trade if it is new. Returns true when it was added. */
   add(t: WalletTrade) {
     if (!this.insert(t)) return false;
