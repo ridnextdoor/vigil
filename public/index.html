@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vigil, paper mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0E13; --panel: #141920; --line: #232B35; --text: #E6EDF3; --muted: #8B98A5; --soft: #C9D4DF;
+    --up: #6EE7B0; --down: #FF9C95; --accent: #3DDC97; --blue: #7AA2F7;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+  .wrap { max-width: 1296px; margin: 0 auto; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 20px; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .banner { background: #2A2410; border: 1px solid #5C4B12; color: #F2D675; border-radius: 8px; padding: 10px 16px; font-size: 13px; line-height: 1.4; }
+  .banner.live { background: #122A1E; border-color: #1E5238; color: #A7F0CC; }
+  .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo { width: 36px; height: 36px; border-radius: 8px; background: #12301F; display: flex; align-items: center; justify-content: center; }
+  .title { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: var(--muted); }
+  .pills { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 6px 14px; font-size: 13px; border: 1px solid #262E39; background: #161B22; color: var(--soft); }
+  .pill.green { background: #122A1E; color: var(--up); border-color: #1E5238; font-weight: 600; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--up); }
+  .dot.off { background: var(--down); }
+  button { min-height: 44px; padding: 0 20px; background: #161B22; color: #FF9C95; border: 1px solid #6B2C2A; border-radius: 8px; font: 600 14px inherit; font-family: inherit; cursor: pointer; }
+  button.resume { color: var(--up); border-color: #1E5238; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .kpi, .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .kpi { padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .kpi .l { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi .v { font-size: 24px; font-weight: 600; }
+  .kpi .n { font-size: 12px; color: var(--muted); }
+  .grid { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+  .left { flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+  .right { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+  .card { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .card h2 { margin: 0; font-size: 15px; font-weight: 600; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+  .hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 700px; font-size: 13px; }
+  th { text-align: left; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; padding: 8px 10px; }
+  td { padding: 11px 10px; border-top: 1px solid var(--line); }
+  .badge { display: inline-block; border-radius: 6px; padding: 3px 10px; font-size: 12px; }
+  .b-buy { background: #122A1E; color: var(--up); border: 1px solid #1E5238; font-weight: 600; }
+  .b-skip { background: #1B2029; color: #B7C2CE; border: 1px solid #2B3440; }
+  .b-watch { background: #14203A; color: #A9C1FA; border: 1px solid #25407A; }
+  .up { color: var(--up); } .down { color: var(--down); }
+  .rowkv { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; border-top: 1px solid var(--line); padding-top: 8px; }
+  .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .stack { display: flex; flex-direction: column; gap: 8px; }
+  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  .bar > div { height: 100%; }
+  .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="banner" class="banner"></div>
+
+  <div class="top">
+    <div class="brand">
+      <div class="logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3DDC97" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>
+      </div>
+      <div>
+        <div class="title">Vigil</div>
+        <div class="sub">Solana launch scanner and paper trader</div>
+      </div>
+    </div>
+    <div class="pills">
+      <span class="pill green"><span class="dot"></span>PAPER MODE, no real funds</span>
+      <span class="pill" id="feedPill"></span>
+      <button id="pauseBtn" type="button">Pause bot</button>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid">
+    <div class="left">
+      <div class="card">
+        <div class="head"><h2>Paper equity</h2><span class="hint">Starting balance, then after each closed trade, net of fees and tips</span></div>
+        <svg id="equity" viewBox="0 0 640 150" width="100%" height="150" preserveAspectRatio="none" role="img" aria-label="Paper equity curve"></svg>
+      </div>
+
+      <div class="card">
+        <div class="head"><h2>New launches, live filter</h2><span class="hint">Each launch is checked against the entry rules on every price update</span></div>
+        <div class="scroll"><table>
+          <thead><tr><th>Token</th><th>Age</th><th>Mkt cap</th><th>Liquidity</th><th>Momentum</th><th>Result</th></tr></thead>
+          <tbody id="scan"></tbody>
+        </table></div>
+      </div>
+
+      <div class="card">
+        <div class="head"><h2>Paper trade log</h2><span class="hint">Every trade is also saved to data/trades.jsonl</span></div>
+        <div class="scroll"><table>
+          <thead><tr><th>Token</th><th>Entry mkt cap</th><th>Exit mkt cap</th><th>Hold</th><th>Result</th><th>Exit reason</th></tr></thead>
+          <tbody id="trades"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="card" id="open"></div>
+      <div class="card" id="rules"></div>
+      <div class="card" id="speed"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  // Token names come from the blockchain and are untrusted: always escape before inserting.
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const usd = (n) => (n >= 1000 ? (n / 1000).toFixed(1) + 'K' : n.toFixed(0));
+  const sol = (n, d = 2) => (n >= 0 ? '' : '-') + Math.abs(n).toFixed(d);
+  const signed = (n, d = 1) => (n >= 0 ? '+' : '-') + Math.abs(n).toFixed(d);
+  const cls = (n) => (n >= 0 ? 'up' : 'down');
+  const secs = (n) => (n < 60 ? n.toFixed(0) + ' s' : (n / 60).toFixed(1) + ' m');
+
+  function render(s) {
+    $('banner').className = 'banner' + (s.mode === 'live' ? ' live' : '');
+    $('banner').textContent = s.mode === 'demo'
+      ? 'Demo mode: the launches and prices are synthetic, made by the bot to exercise the pipeline. Results here mean nothing about real markets.'
+      : 'Live feed: real pump.fun launches, simulated fills only. Nothing is bought or sold.';
+
+    const fp = $('feedPill');
+    const ago = s.feed.lastEventAgoMs;
+    fp.innerHTML = '<span class="dot' + (s.feed.connected ? '' : ' off') + '"></span>' +
+      (s.feed.connected ? 'Feed connected' : 'Feed disconnected') +
+      (ago !== null ? ' <span class="mono" style="color:#8B98A5">' + (ago < 1000 ? ago + ' ms' : (ago / 1000).toFixed(1) + ' s') + ' ago</span>' : '');
+
+    const pb = $('pauseBtn');
+    pb.textContent = s.paused ? 'Resume bot' : 'Pause bot';
+    pb.className = s.paused ? 'resume' : '';
+
+    const k = s.kpis;
+    const tiles = [
+      ['Paper balance', sol(k.balanceSol) + ' SOL', '', 'Started at ' + s.rules.risk.startingBalanceSol.toFixed(2) + ' SOL'],
+      ['Net result', signed(k.netSol, 3) + ' SOL', cls(k.netSol), 'After fees and tips'],
+      ['Win rate', k.trades ? k.winRatePct.toFixed(0) + '%' : 'n/a', '', k.wins + ' wins of ' + k.trades + ' trades'],
+      ['Avg hold', k.trades ? k.avgHoldSec.toFixed(0) + ' s' : 'n/a', '', 'Cap is ' + s.rules.exit.maxHoldSec + ' s'],
+      ['Avg win / avg loss', k.trades ? signed(k.avgWinPct, 0) + '% / ' + signed(k.avgLossPct, 0) + '%' : 'n/a', '', 'Before tips'],
+      ['Fees and tips', '-' + k.feesSol.toFixed(3) + ' SOL', 'down', 'Counted in the net result'],
+    ];
+    $('kpis').innerHTML = tiles.map(([l, v, c, n]) =>
+      '<div class="kpi"><span class="l">' + l + '</span><span class="v mono ' + c + '">' + esc(v) + '</span><span class="n">' + esc(n) + '</span></div>').join('');
+
+    // equity curve
+    const eq = s.equity.length > 1 ? s.equity : [s.equity[0], s.equity[0]];
+    const lo = Math.min(...eq), hi = Math.max(...eq), span = hi - lo || 1;
+    const pts = eq.map((v, i) => (i / (eq.length - 1) * 640).toFixed(1) + ',' + (140 - ((v - lo) / span) * 120).toFixed(1)).join(' ');
+    $('equity').innerHTML =
+      [37, 75, 113].map((y) => '<line x1="0" y1="' + y + '" x2="640" y2="' + y + '" stroke="#232B35" stroke-width="1"/>').join('') +
+      '<polyline points="' + pts + '" fill="none" stroke="#3DDC97" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>';
+
+    // scanner
+    $('scan').innerHTML = s.scan.length ? s.scan.map((r) => {
+      let badge;
+      if (r.status === 'entering' || r.status === 'entered') badge = '<span class="badge b-buy">BUY signal</span>';
+      else if (r.status === 'skipped') badge = '<span class="badge b-skip">Skip: ' + esc(r.reason) + '</span>';
+      else badge = '<span class="badge b-watch">Watching: ' + esc(r.reason) + '</span>';
+      const mom = r.momentumPct === null ? 'n/a' : signed(r.momentumPct, 0) + '%';
+      return '<tr><td><strong>' + esc(r.token) + '</strong></td><td class="mono">' + secs(r.ageSec) + '</td><td class="mono">' + usd(r.mcUsd) +
+        '</td><td class="mono">$' + usd(r.liqUsd) + '</td><td class="mono">' + mom + '</td><td>' + badge + '</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="empty">Waiting for launches...</td></tr>';
+
+    // trades
+    $('trades').innerHTML = s.trades.length ? s.trades.map((t) =>
+      '<tr><td><strong>' + esc(t.token) + '</strong></td><td class="mono">' + usd(t.entryMcUsd) + '</td><td class="mono">' + usd(t.exitMcUsd) +
+      '</td><td class="mono">' + t.holdSec.toFixed(0) + ' s</td><td class="mono ' + cls(t.pnlPct) + '" style="font-weight:600">' + signed(t.pnlPct) +
+      '%</td><td style="color:#B7C2CE">' + esc(t.reason) + '</td></tr>').join('')
+      : '<tr><td colspan="6" class="empty">No closed trades yet.</td></tr>';
+
+    // open positions
+    $('open').innerHTML = '<h2>Open positions</h2>' + (s.open.length ? s.open.map((p) =>
+      '<div class="stack"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:18px;font-weight:700">' + esc(p.token) +
+      '</span><span class="mono ' + cls(p.pnlPct) + '" style="font-size:18px;font-weight:600">' + signed(p.pnlPct) + '%</span></div>' +
+      '<div class="rowkv"><span style="color:#8B98A5">Entry</span><span class="mono">' + usd(p.entryMcUsd) + '</span></div>' +
+      '<div class="rowkv"><span style="color:#8B98A5">Now</span><span class="mono">' + usd(p.nowMcUsd) + '</span></div>' +
+      '<div class="rowkv"><span style="color:#8B98A5">Held</span><span class="mono">' + p.heldSec.toFixed(0) + ' s of ' + p.maxHoldSec + ' s' + (p.exiting ? ' (exiting: ' + esc(p.exiting) + ')' : '') + '</span></div>' +
+      '<div class="bar" role="img" aria-label="Hold timer"><div style="width:' + Math.min(100, (p.heldSec / p.maxHoldSec) * 100) + '%;background:#3DDC97"></div></div></div>').join('<hr style="border:0;border-top:1px solid #232B35;width:100%">')
+      : '<div class="empty">No open position.</div>');
+
+    // rules
+    const e = s.rules.entry, x = s.rules.exit, r = s.rules.risk;
+    const kv = (a) => a.map(([n, v]) => '<div class="rowkv"><span style="color:#C9D4DF">' + n + '</span><span class="mono">' + v + '</span></div>').join('');
+    $('rules').innerHTML = '<h2>Rules the bot follows</h2>' +
+      '<div class="stack"><span class="label">Entry filters</span>' + kv([
+        ['Token age', 'up to ' + e.maxAgeSec + ' s'], ['Market cap', usd(e.minMcUsd) + ' to ' + usd(e.maxMcUsd)],
+        ['Liquidity', 'at least $' + usd(e.minLiquidityUsd)], ['Momentum', '+' + e.minMomentumPct + '% in ' + e.momentumWindowSec + ' s'],
+      ]) + '</div>' +
+      '<div class="stack"><span class="label">Exit and safety</span>' + kv([
+        ['Take profit', '+' + x.takeProfitPct + '%'], ['Stop loss', '-' + x.stopLossPct + '%'], ['Max hold', x.maxHoldSec + ' s'],
+        ['Size per trade', r.positionSol + ' SOL'], ['Max open', r.maxOpenPositions], ['Daily loss cap', r.dailyLossCapSol + ' SOL'],
+      ]) + '</div>' +
+      '<div class="stack"><span class="label">Not checked yet</span><div class="hint">Holder count, bundlers, dev holding, mint and freeze authority. These need extra data per token. Edit the rules in src/config.ts. Values are starting points to test, not recommendations.</div></div>';
+
+    // speed
+    const L = s.latency, ms = [['Update to decision', L.decisionMs, L.decisionMs.toFixed(2) + ' ms'], ['Simulated landing delay', L.landingMs, L.landingMs + ' ms'], ['Launch seen to entry', L.launchToEntrySec * 1000, L.launchToEntrySec.toFixed(1) + ' s']];
+    const max = Math.max(...ms.map((m) => m[1]), 1);
+    $('speed').innerHTML = '<h2>Speed, per trade</h2>' + ms.map(([n, v, label]) =>
+      '<div class="stack"><div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#C9D4DF">' + n + '</span><span class="mono">' + label +
+      '</span></div><div class="bar" style="height:6px"><div style="width:' + (v / max * 100).toFixed(0) + '%;background:#7AA2F7"></div></div></div>').join('') +
+      '<div class="hint">Landing delay is an assumption in config. Real landing time depends on your RPC, tip and location, and is not measured here.</div>';
+  }
+
+  async function poll() {
+    try {
+      const r = await fetch('/api/state', { cache: 'no-store' });
+      render(await r.json());
+    } catch (err) { /* server not reachable, try again next tick */ }
+  }
+  $('pauseBtn').addEventListener('click', async () => {
+    await fetch('/api/pause', { method: 'POST', headers: { 'x-dashboard': '1' } });
+    poll();
+  });
+  poll();
+  setInterval(poll, 1000);
+</script>
+</body>
+</html>

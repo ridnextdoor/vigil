@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vigil, wallet tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0B0E13; --panel:#141920; --line:#232B35; --text:#E6EDF3; --muted:#8B98A5; --soft:#C9D4DF; --up:#6EE7B0; --down:#FF9C95; --blue:#7AA2F7; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; }
+  a { color:var(--blue); text-decoration:none; } a:hover { text-decoration:underline; }
+  .wrap { max-width:1296px; margin:0 auto; padding:24px 32px 40px; display:flex; flex-direction:column; gap:20px; }
+  .mono { font-family:'JetBrains Mono',monospace; }
+  .banner { background:#14203A; border:1px solid #25407A; color:#A9C1FA; border-radius:8px; padding:10px 16px; font-size:13px; line-height:1.4; }
+  .top { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; }
+  .brand { display:flex; align-items:center; gap:14px; }
+  .logo { width:36px; height:36px; border-radius:8px; background:#12301F; display:flex; align-items:center; justify-content:center; }
+  .title { font-size:20px; font-weight:700; letter-spacing:-0.01em; }
+  .sub { font-size:13px; color:var(--muted); }
+  .pills { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .pill { display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:6px 14px; font-size:13px; border:1px solid #262E39; background:#161B22; color:var(--soft); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--up); } .dot.off { background:#8B98A5; } .dot.bad { background:var(--down); }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; }
+  .kpi,.card { background:var(--panel); border:1px solid var(--line); border-radius:10px; }
+  .kpi { padding:16px 18px; display:flex; flex-direction:column; gap:8px; }
+  .kpi .l { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .kpi .v { font-size:24px; font-weight:600; } .kpi .n { font-size:12px; color:var(--muted); }
+  .grid { display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start; }
+  .left { flex:999 1 640px; min-width:0; display:flex; flex-direction:column; gap:20px; }
+  .right { flex:1 1 340px; min-width:0; display:flex; flex-direction:column; gap:20px; }
+  .card { padding:18px 20px; display:flex; flex-direction:column; gap:12px; }
+  .card h2 { margin:0; font-size:15px; font-weight:600; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; }
+  .hint { font-size:12px; color:var(--muted); line-height:1.5; }
+  .scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; min-width:680px; font-size:13px; }
+  th { text-align:left; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; font-weight:500; padding:8px 10px; }
+  td { padding:10px; border-top:1px solid var(--line); }
+  .badge { display:inline-block; border-radius:6px; padding:3px 10px; font-size:12px; font-weight:600; }
+  .b-buy { background:#122A1E; color:var(--up); border:1px solid #1E5238; }
+  .b-sell { background:#2A1614; color:var(--down); border:1px solid #6B2C2A; }
+  .b-flat { background:#1B2029; color:#B7C2CE; border:1px solid #2B3440; font-weight:400; }
+  .up { color:var(--up); } .down { color:var(--down); }
+  .rowkv { display:flex; justify-content:space-between; gap:12px; font-size:13px; border-top:1px solid var(--line); padding-top:8px; }
+  .rowkv span:first-child { color:var(--soft); }
+  .label { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .stack { display:flex; flex-direction:column; gap:8px; }
+  .bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; }
+  .bar > div { height:100%; background:var(--blue); }
+  .empty { color:var(--muted); font-size:13px; padding:8px 0; }
+  .spark { display:flex; align-items:flex-end; gap:4px; height:56px; }
+  .spark div { flex:1; background:var(--blue); border-radius:2px 2px 0 0; min-height:2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="banner" class="banner"></div>
+  <div class="top">
+    <div class="brand">
+      <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3DDC97" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg></div>
+      <div><div class="title">Vigil</div><div class="sub">Wallet tracker, read only</div></div>
+    </div>
+    <div class="pills" id="pills"></div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="grid">
+    <div class="left">
+      <div class="card">
+        <div class="head"><h2>Recent activity</h2><span class="hint">Newest first. Value is an estimate and includes fees and tips.</span></div>
+        <div class="scroll"><table>
+          <thead><tr><th>Time</th><th>Side</th><th>Token</th><th>Size</th><th>Mkt cap</th><th>Token age</th><th>Liquidity</th></tr></thead>
+          <tbody id="activity"></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <div class="head"><h2>Tokens traded</h2><span class="hint">One row per token: all buys and sells combined. PnL only for fully sold tokens.</span></div>
+        <div class="scroll"><table>
+          <thead><tr><th>Token</th><th>Buys / sells</th><th>Entry mkt cap</th><th>Cost</th><th>Proceeds</th><th>PnL</th><th>Hold</th><th>Status</th></tr></thead>
+          <tbody id="trips"></tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="right">
+      <div class="card" id="patterns"></div>
+      <div class="card" id="dist"></div>
+      <div class="card" id="notes"></div>
+    </div>
+  </div>
+</div>
+<script>
+  const $ = (id) => document.getElementById(id);
+  // Everything here comes from chain data or a file: escape before inserting into the page.
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  const usd = (n) => n === null || n === undefined ? 'n/a' : (Math.abs(n) >= 1000 ? (n/1000).toFixed(1)+'K' : n.toFixed(0));
+  const dollars = (n) => n === null || n === undefined ? 'n/a' : (n < 0 ? '-$' : '$') + Math.abs(n).toFixed(0);
+  const signed = (n, d = 1) => (n >= 0 ? '+' : '-') + Math.abs(n).toFixed(d);
+  const cls = (n) => n === null || n === undefined ? '' : (n >= 0 ? 'up' : 'down');
+  const dur = (s) => s === null || s === undefined ? 'n/a' : s < 60 ? s.toFixed(0)+' s' : s < 3600 ? (s/60).toFixed(1)+' min' : (s/3600).toFixed(1)+' h';
+  const short = (m) => m.slice(0,4) + '...' + m.slice(-4);
+  const tokenLink = (m) => '<a class="mono" href="https://solscan.io/token/' + encodeURIComponent(m) + '" target="_blank" rel="noopener noreferrer">' + esc(short(m)) + '</a>';
+  const when = (ts) => new Date(ts).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+  function dist(title, rows) {
+    const max = Math.max(...rows.map((r) => r.count), 1);
+    return '<div class="stack"><span class="label">' + title + '</span>' + rows.map((r) =>
+      '<div class="stack" style="gap:4px"><div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#C9D4DF">' + esc(r.label) +
+      '</span><span class="mono">' + r.count + '</span></div><div class="bar"><div style="width:' + (r.count / max * 100) + '%"></div></div></div>').join('') + '</div>';
+  }
+
+  function render(s) {
+    const p = s.patterns, t = s.totals;
+    $('banner').innerHTML = (t.trades
+      ? 'Tracking <a href="https://solscan.io/account/' + encodeURIComponent(s.wallet) + '" target="_blank" rel="noopener noreferrer" class="mono">' + esc(short(s.wallet)) + '</a> from ' + esc(s.sources.join(' + ')) + ' data. Only pump.fun token trades are shown.'
+      : 'No trades loaded yet. Import a Solscan DeFi activities CSV, or set RPC_WS_URL to follow the wallet live.');
+
+    const ago = s.live && s.live.lastEventAgoMs !== null ? ' <span class="mono" style="color:#8B98A5">' + (s.live.lastEventAgoMs < 60000 ? (s.live.lastEventAgoMs/1000).toFixed(0)+' s' : dur(s.live.lastEventAgoMs/1000)) + ' ago</span>' : '';
+    const snap = s.snapshotAt ? '<span class="pill"><span class="dot"></span>Updated <span class="mono">' + dur((Date.now() - s.snapshotAt) / 1000) + '</span> ago, refreshes every few minutes</span>' : null;
+    $('pills').innerHTML = (snap ||
+      '<span class="pill"><span class="dot ' + (s.live ? (s.live.connected ? '' : 'bad') : 'off') + '"></span>' + (s.live ? (s.live.connected ? 'Following live' : 'Live feed disconnected') : 'Saved history only') + ago + '</span>') +
+      (s.balanceSol !== null ? '<span class="pill">Wallet <span class="mono">' + s.balanceSol.toFixed(2) + ' SOL</span></span>' : '');
+
+    const tiles = [
+      ['Trades tracked', t.trades, t.buys + ' buys, ' + t.sells + ' sells'],
+      ['Tokens traded', t.tokens, p.closedTrips + ' fully sold'],
+      ['Win rate', p.winRatePct === null ? 'n/a' : p.winRatePct.toFixed(0) + '%', p.wins + ' of ' + p.closedTrips + ' sold tokens', ''],
+      ['Net PnL (sold tokens)', dollars(p.netPnlUsd), 'Estimated, in USD', cls(p.netPnlUsd)],
+      ['Median hold', dur(p.medianHoldSec), 'First buy to last sell'],
+      ['Median buy size', dollars(p.medianBuyUsd), 'Avg ' + dollars(p.avgBuyUsd)],
+    ];
+    $('kpis').innerHTML = tiles.map(([l, v, n, c]) => '<div class="kpi"><span class="l">' + l + '</span><span class="v mono ' + (c || '') + '">' + esc(v) + '</span><span class="n">' + esc(n) + '</span></div>').join('');
+
+    $('activity').innerHTML = s.activity.length ? s.activity.map((a) =>
+      '<tr><td class="mono">' + esc(when(a.ts)) + '</td><td><span class="badge ' + (a.side === 'buy' ? 'b-buy' : 'b-sell') + '">' + (a.side === 'buy' ? 'BUY' : 'SELL') + '</span></td><td>' + tokenLink(a.mint) +
+      '</td><td class="mono">' + dollars(a.usd) + '</td><td class="mono">' + usd(a.mcUsd) + '</td><td class="mono">' + dur(a.ageSec) + '</td><td class="mono">' + (a.liqUsd === undefined || a.liqUsd === null ? 'n/a' : '$' + usd(a.liqUsd)) + '</td></tr>').join('')
+      : '<tr><td colspan="7" class="empty">Nothing yet.</td></tr>';
+
+    const label = { closed: 'Sold', open: 'Still holding', 'partial-history': 'Bought before data starts' };
+    $('trips').innerHTML = s.trips.length ? s.trips.map((r) =>
+      '<tr><td>' + tokenLink(r.mint) + '</td><td class="mono">' + r.buys + ' / ' + r.sells + '</td><td class="mono">' + usd(r.entryMcUsd) + '</td><td class="mono">' + dollars(r.costUsd) +
+      '</td><td class="mono">' + dollars(r.proceedsUsd) + '</td><td class="mono ' + cls(r.pnlUsd) + '" style="font-weight:600">' + (r.pnlUsd === null ? 'n/a' : dollars(r.pnlUsd) + ' (' + signed(r.pnlPct, 0) + '%)') +
+      '</td><td class="mono">' + dur(r.holdSec) + '</td><td><span class="badge b-flat">' + esc(label[r.status]) + '</span></td></tr>').join('')
+      : '<tr><td colspan="8" class="empty">Nothing yet.</td></tr>';
+
+    const kv = (a) => a.map(([n, v]) => '<div class="rowkv"><span>' + n + '</span><span class="mono">' + esc(v) + '</span></div>').join('');
+    const maxA = Math.max(...p.activity.map((x) => x.count), 1);
+    $('patterns').innerHTML = '<h2>Behavior patterns</h2><div class="stack">' + kv([
+      ['Typical entry market cap', p.medianEntryMcUsd === null ? 'n/a' : usd(p.medianEntryMcUsd)],
+      ['Buys per hour (average)', p.buysPerHour === null ? 'n/a' : p.buysPerHour.toFixed(1)],
+      ['Tokens bought more than once', p.scaleInPct === null ? 'n/a' : p.scaleInPct.toFixed(0) + '%'],
+      ['Average win', p.avgWinPct === null ? 'n/a' : signed(p.avgWinPct) + '%'],
+      ['Average loss', p.avgLossPct === null ? 'n/a' : signed(p.avgLossPct) + '%'],
+    ]) + '</div><div class="stack"><span class="label">Trades per 10 minutes</span><div class="spark" role="img" aria-label="Trades per 10 minute window">' +
+      p.activity.map((x) => '<div title="' + x.count + ' trades" style="height:' + Math.max(4, x.count / maxA * 100) + '%"></div>').join('') + '</div></div>';
+
+    $('dist').innerHTML = '<h2>Distributions</h2>' + dist('Hold time (sold tokens)', p.holdBuckets) + dist('Entry market cap', p.entryMcBuckets) +
+      (p.entryAgeBuckets.length ? dist('Token age at first buy (' + p.ageKnown + ' tokens)', p.entryAgeBuckets)
+        : '<div class="hint">Token age at entry is only recorded while following the wallet live with an RPC URL.</div>');
+
+    $('notes').innerHTML = '<h2>What this does not show</h2><div class="hint">Holder count, bundlers and dev holding at the time of each buy are not tracked, because they need an indexer API. Values in USD are estimated from the wallet\'s own swaps. Tokens bought before the data starts are listed but excluded from PnL.</div>';
+  }
+
+  let timer = null;
+  async function poll() {
+    try {
+      const s = await (await fetch('/api/tracker', { cache: 'no-store' })).json();
+      render(s);
+      if (s.snapshotAt && timer) { clearInterval(timer); timer = setInterval(poll, 60000); } // static copy: slow down
+    } catch (e) { /* retry next tick */ }
+  }
+  poll();
+  timer = setInterval(poll, 2000);
+</script>
+</body>
+</html>

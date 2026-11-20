@@ -1,0 +1,26 @@
+{
+  "name": "vigil",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Paper-trading pump.fun launch scanner with a local dashboard. No wallet, no real trades.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/track.ts",
+    "paper": "tsx src/index.ts",
+    "sync": "tsx src/sync.ts",
+    "build-site": "tsx src/build-site.ts",
+    "demo": "tsx src/index.ts --demo",
+    "selftest": "tsx src/selftest.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.98.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.12",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

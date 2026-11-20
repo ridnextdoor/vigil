@@ -1,0 +1,5 @@
+node_modules
+.env
+site
+data/trades.jsonl
+data/signals.jsonl
